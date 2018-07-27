@@ -9,14 +9,41 @@
     <script src="js/vue.js" type="text/javascript"></script>
     <script type="text/javascript">
         $(function(){
+            var href = location.href;
+            var house_id = 0;
+            if(href.indexOf("?")>0){
+                var id = href.split("?")[1];
+                house_id = id.split("=")[1];
+            }
             var vue = new Vue({
                 el:'#app',
                 data:{
-                    url:'http://localhost:8080',
+                    url:'http://localhost:8080/hotel',
                     kinds:[],
                     house:{kid:0}
                 },
                 methods:{
+                    gethouse:function(){
+                        if(house_id>0){
+                            var that = this;
+                            $.getJSON(that.url+"/house/find/"+house_id,function(data){
+                               that.house = data;
+                               that.house.kid = data.kind.id;
+                               if(data.pica) {
+                                   $(".thumbnail>img:eq(0)").attr("src", that.url+"/images/"+data.pica);
+                               }
+                                if(data.picb) {
+                                    $(".thumbnail>img:eq(1)").attr("src", that.url+"/images/"+data.picb);
+                                }
+                                if(data.picc) {
+                                    $(".thumbnail>img:eq(2)").attr("src", that.url+"/images/"+data.picc);
+                                }
+                                if(data.picd) {
+                                    $(".thumbnail>img:eq(3)").attr("src", that.url+"/images/"+data.picd);
+                                }
+                            })
+                        }
+                    },
                     getkinds:function () {
                         var that = this;
                         $.getJSON(that.url+"/kind/query",function (data) {
@@ -25,8 +52,18 @@
                     },
                     save:function(){
                         var that = this;
-                        $.post(that.url+"/house/save",that.house,function (data) {
-                            if(data){
+                        var ps = {
+                          id:that.house.id,
+                          hname:that.house.hname,
+                          size:that.house.size,
+                          beds:that.house.beds,
+                          price:that.house.price,
+                          kid:that.house.kid,
+                          info:that.house.info
+                        };
+                        $.post(that.url+"/house/save",ps,function (data) {
+                            if(data && data.id>0){
+                                that.house = data;
                                 $(".msg").html("<span style='color:green'>客房信息保存成功！</span>")
                             }else{
                                 $(".msg").html("<span style='color:red'>客房信息保存失败，请重试！</span>")
@@ -39,6 +76,7 @@
                 }
             });
             vue.getkinds();
+            vue.gethouse();
             $(".thumbnail").click(function () {
                 var $file = $(this).parent().find(".file");
                 $file.click();
@@ -59,24 +97,35 @@
             })
             //执行文件上传操作
             $("#btnup").click(function(){
-                var fd = new FormData();
-                $(".file").each(function(){
-                    fd.append("files[]",this.files[0]);
-                })
-                $.ajax({
-                    url:'http://localhost:8080/hotel/house/uploads',
-                    type:'POST',
-                    data:fd,
-                    cache:false,
-                    contentType:false,
-                    processData:false,
-                    success:function(data){
-                        $(".upmsg").html("成功上传了"+data+"张图片");
-                    },
-                    error:function(data){
-                        $(".upmsg").html(data);
-                    }
-                })
+                if(vue.house.id && vue.house.id>0) {
+                    var fd = new FormData();
+                    fd.append("id", vue.house.id);
+                    fd.append("pica",$(".file")[0].files[0]);
+                    fd.append("picb",$(".file")[1].files[0]);
+                    fd.append("picc",$(".file")[2].files[0]);
+                    fd.append("picd",$(".file")[3].files[0]);
+
+                    $.ajax({
+                        url: 'http://localhost:8080/hotel/house/uploads',
+                        type: 'POST',
+                        data: fd,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        success: function (data) {
+                            if(data) {
+                                $(".upmsg").html("<span style='color:darkgreen;'>图片上传成功！</span>");
+                            }else{
+                                $(".upmsg").html("<span style='color:red;'>图片上传失败，请重试！</span>");
+                            }
+                        },
+                        error: function (data) {
+                            $(".upmsg").html("<span style='color:red;'>图片上传失败，请重试！</span>");
+                        }
+                    })
+                }else{
+                    $(".upmsg").html("<span style='color:red'>请先保存客房基本信息！</span>")
+                }
             })
         })
     </script>

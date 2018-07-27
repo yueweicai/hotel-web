@@ -12,14 +12,17 @@
             var vue = new Vue({
                 el:'#app',
                 data:{
-                    url:'http://localhost:8080/',
+                    url:'http://localhost:8080/hotel/',
                     houses:[],
                     kinds:[],
                     param:{page:1,rows:10,kid:0,beds:0},
                     pages:1
                 },
                 methods:{
-                    reset:function () {
+                    show: function(id) {
+                        location.href = "house.html?id="+id;
+                    },
+                    reset:function() {
                         this.param.kid = 0;
                         this.param.beds = 0;
                         this.query();
@@ -129,7 +132,7 @@
                                 </button>
                             </td>
                             <td>
-                                <button class="btn btn-warning">编辑</button>
+                                <button @click="show(h.id)" class="btn btn-warning">编辑</button>
                             </td>
                             <td>
                                 <button class="btn btn-danger">删除</button>
