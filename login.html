@@ -8,58 +8,61 @@
     <script src="js/jquery.min.js" type="text/javascript"></script>
     <script src="js/bootstrap.min.js" type="text/javascript"></script>
     <script src="js/verify.min.js" type="text/javascript"></script>
-
-    <title>管理登录</title>
+    <title>管理员登录</title>
     <script>
         $(function(){
-            var vc = false;
-            var code;
-            $("#vcode").slideVerify({
-                type : 1,
-                vOffset : 5,
-                explain : '向右滑动完成验证',
-                barSize : {
-                    width : '87%',
-                    height : '35px',
-                },
-                ready : function() {
-                },
+            var vcode = false;
+            var vo = null;
+            $('#code').slideVerify({
+                type : 1,		//类型
+                vOffset : 5,	//误差量，根据需求自行调整
+                barSize : {width:'100%',height:'40px'},
                 success : function(obj) {
-                    code = obj;
-                    vc = true;
+                    vcode = true;
+                    vo = obj;
                 },
                 error : function() {
-                    vc = false;
+                    vcode = false;
                 }
-            })
-
+            });
             $("#btnLogin").click(function(){
-                var uid = $("#uid").val();
-                var pwd = $("#pwd").val();
-                var reg = /^[a-zA-Z0-9]{4,8}$/
-                if(!reg.test(uid)){
+                var uid = $("#uid>input").val();
+                var pwd = $("#pwd>input").val();
+                var reg = /^[0-9a-zA-Z]{4,8}$/;
+                if(reg.test(uid)){
+                   $("#uid").removeClass("has-error");
+                   $("#uid").addClass("has-success");
+                }else{
+                   $("#uid").removeClass("has-success");
+                   $("#uid").addClass("has-error");
+                   return;
+                }
+                if(reg.test(pwd)){
+                    $("#pwd").removeClass("has-error");
+                    $("#pwd").addClass("has-success");
+                }else{
+                    $("#pwd").removeClass("has-success");
+                    $("#pwd").addClass("has-error");
                     return;
                 }
-                if(!reg.test(pwd)){
-                    return;
-                }
-                if(!vc){
-                    return;
-                }
-                var ps = {
-                    username:uid,
-                    password:pwd
-                }
-                $.post("http://localhost:8080/hotel/admin/login",ps,function (data) {
-                    if(data){
-                        var admin = JSON.stringify(data);
-                        sessionStorage.setItem("admin",admin);
-                        location.href = "index.html";
-                    }else{
-                        vc = false;
-                        code.refresh();
+                if(vcode){
+                    var ps = {
+                        username:uid,
+                        password:pwd
                     }
-                })
+                    $.post("http://localhost:8080/hotel2/admin/login",ps,function(data){
+                        if(data){
+                            var s = JSON.stringify(data);
+                            localStorage.setItem("admin",s);
+                            location.href = "index.html";
+                        }else{
+                            vcode = false;
+                            vo.refresh();
+                            $(".msg").text("用户名或密码不正确，请重新输入！");
+                            $(".msg").css("color","darkred");
+                        }
+                    });
+                }
             })
         })
     </script>
@@ -74,32 +77,32 @@
                         <h3 class="panel-title">管理员登录</h3>
                     </div>
                     <div class="panel-body">
-                        <div class="form-group">
-                            <div class="input-group">
-                                <label class="input-group-addon">账号</label>
-                                <input id="uid" class="form-control">
-                            </div>
+                        <div class="form-group" id="uid">
+                            <label>账号</label>
+                            <input class="form-control">
+                        </div>
+                        <div class="form-group" id="pwd">
+                            <label>密码</label>
+                            <input type="password" class="form-control">
                         </div>
                         <div class="form-group">
-                            <div class="input-group">
-                                <label class="input-group-addon">密码</label>
-                                <input id="pwd" type="password" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="input-group">
-                                <label class="input-group-addon">验证码</label>
-                                <div id="vcode"></div>
-                            </div>
+                            <label>验证码</label>
+                            <div id="code"></div>
                         </div>
                     </div>
-                    <div class="panel-footer text-right">
-                        <button id="btnLogin" class="btn btn-primary">登录</button>
+                    <div class="panel-footer">
+                        <div class="row">
+                            <label class="col-md-10 msg"></label>
+                            <div class="col-md-2">
+                                <button id="btnLogin" class="btn btn-primary btn-block">登录</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3"></div>
         </div>
     </div>
+
 </body>
 </html>

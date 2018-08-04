@@ -1,48 +1,50 @@
-<link rel="stylesheet" href="css/menu.css">
-<link rel="stylesheet" href="css/font.css">
-<script src="js/vue.js"></script>
 <script>
     $(function(){
-        var mvue = new Vue({
-            el:'#menu',
+        var vue = new Vue({
+            el:'#accordion',
             data:{
-                nodes:admin.powers,
-                pnodes:[]
+                powers : admin.powers,
+                parents : []
             },
-            methods:{
-                getparents : function(){
+            methods : {
+                gmenu : function(){
                     var that = this;
-                    $.each(that.nodes,function(){
-                        if(this.pid==0) {
-                            var father = this;
-                            $.each(that.nodes,function(){
-                                if(this.pid==father.id){
-                                    father.hasSon = true;
-                                }
-                            })
-                            that.pnodes.push(father);
+                    $.each(that.powers,function(i,p){
+                        if(p.pid==0){
+                            that.parents.push(p);
                         }
                     })
                 }
             }
         })
-        mvue.getparents();
-        $(".panel-body").remove();
+        vue.gmenu();
     })
 </script>
-<div id="menu" class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-    <div class="panel panel-default" v-for="(n,index) in pnodes">
-        <div class="panel-heading" role="tab" :id="'heading'+index">
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+    <div class="panel panel-info">
+        <div class="panel-heading" role="tab" id="index">
             <h4 class="panel-title">
-                <a href="n.url" class="" role="button" data-toggle="collapse" data-parent="#accordion" :href="'#collapse'+index" aria-expanded="true" :aria-controls="'collapse'+index">
-                    <span :class="n.icon"></span> {{n.pname}}
+                <a role="button" href="index.html">
+                    <i class="glyphicon glyphicon-home"></i> 首页
                 </a>
             </h4>
         </div>
-        <div v-if="n.hasSon" :id="'collapse'+index" class="panel-collapse collapse" role="tabpanel" :aria-labelledby="'heading'+index">
+    </div>
+
+    <div class="panel panel-info" v-for="(p,index) in parents">
+        <div class="panel-heading" role="tab" :id="'heading'+index">
+            <h4 class="panel-title">
+                <a role="button" data-toggle="collapse" data-parent="#accordion" :href="'#collapse'+index" aria-expanded="true" :aria-controls="'collapse'+index">
+                   <i :class="p.icon"></i> {{p.pname}}
+                </a>
+            </h4>
+        </div>
+        <div :id="'collapse'+index" class="panel-collapse collapse" role="tabpanel" :aria-labelledby="'heading'+index">
             <div class="panel-body">
-                <p v-for="s in nodes" v-if="s.pid==n.id">
-                    <a :href="s.url"><span :class="s.icon"></span>  {{s.pname}}</a>
+                <p v-for="s in powers" v-if="s.pid==p.id">
+                    <a :href="s.url">
+                        <i :class="s.icon"></i> {{s.pname}}
+                    </a>
                 </p>
             </div>
         </div>
