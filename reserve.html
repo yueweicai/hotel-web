@@ -20,12 +20,40 @@
                    kinds:[],
                    reserve:{kid:0},
                    houses : [],
-                   hprice : {}
+                   hprice : {},
+                   house:{}
                },
                methods:{
+                   save : function(){
+                       var that = this;
+                       var ps = {
+                           custom:$("#custom").val(),
+                           phone:$("#phone").val(),
+                           rdate:$("#rdate").val(),
+                           ldate:$("#ldate").val(),
+                           hid:that.house.id,
+                           persons:$("#persons").val(),
+                           price:$("#price").val(),
+                           total:0
+                       }
+                       var t1 = new Date(ps.rdate).getTime();
+                       var t2 = new Date(ps.ldate).getTime();
+                       var days = (t2 - t1)/1000/60/60/24;
+                       ps.total = ps.price * days;
+
+                       $.post(that.url+'/reserve/save',ps,function(data){
+                           if(data){
+                              $(".msg").html("<span style='color:darkgreen'>客房预订记录保存成功！</span>");
+                           }else{
+                               $(".msg").html("<span style='color:darkred'>客房预订记录保存失败，请重试！</span>")
+                           }
+                       })
+                   },
                    choose:function(h){
-                        $("#hname").val(h.hname);
-                        $("#dialog").modal('hide');
+                       this.house = h;
+                       $("#hname").val(h.hname);
+                       $("#persons").val(h.beds);
+                       $("#dialog").modal('hide');
                    },
                    getkinds : function(){
                        var that = this;
@@ -37,11 +65,10 @@
                        $("#hname").val('');
                        var that = this;
                        var ps = {
-                           kid: that.reserve.kid,
+                           kid: $("#kid").val(),
                            sdate: $("#rdate").val(),
                            edate: $("#ldate").val()
                        }
-                       console.log(ps)
                        $.getJSON(that.url+'/price/get',ps,function(data){
                            if(data){
                                $("#price").val(data.price * data.dis);
@@ -52,7 +79,7 @@
                    gethouses : function(){
                        var that = this;
                        var ps = {
-                           kid: that.reserve.kid,
+                           kid: $("#kid").val(),
                            rdate: $("#rdate").val(),
                            ldate: $("#ldate").val()
                        }
@@ -122,13 +149,13 @@
                 <div class="form-group">
                     <div class="input-group">
                         <label class="input-group-addon">客户姓名</label>
-                        <input class="form-control">
+                        <input id="custom" class="form-control">
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="input-group">
                         <label class="input-group-addon">联系电话</label>
-                        <input v-model="reserve.phone" class="form-control">
+                        <input id="phone" class="form-control">
                     </div>
                 </div>
                 <div class="form-group">
@@ -146,7 +173,7 @@
                 <div class="form-group">
                     <div class="input-group">
                         <label class="input-group-addon">客房类型</label>
-                        <select @change="kchange" v-model="reserve.kid" class="form-control">
+                        <select id="kid" @change="kchange" class="form-control">
                             <option value="0">选择客房类型</option>
                             <option v-for="k in kinds" :value="k.id">{{k.name}}</option>
                         </select>
@@ -167,7 +194,7 @@
                 <div class="form-group">
                     <div class="input-group">
                         <label class="input-group-addon">入住人数</label>
-                        <input v-model="reserve.persons" class="form-control">
+                        <input id="persons" class="form-control">
                     </div>
                 </div>
                 <div class="row">
@@ -178,7 +205,7 @@
                         <p class="msg"></p>
                     </div>
                     <div class="col-md-2">
-                        <button class="btn btn-primary btn-block">保存</button>
+                        <button @click="save" class="btn btn-primary btn-block">保存</button>
                     </div>
                 </div>
             </div>
