@@ -19,23 +19,58 @@
                    url:'http://localhost:8080/hotel2',
                    reserves:[],
                    page:1,
-                   rows:10
+                   rows:10,
+                   pages:1,
+                   kinds:[]
                },
                methods:{
+                   change : function(id){
+                       var that = this;
+                       $.get(that.url+'/reserve/change',{id:id},function (data) {
+                           if(data){
+                               that.query();
+                           }
+                       })
+                   },
+                   goto:function(n){
+                       this.page = n;
+                       this.query();
+                   },
+                   reset:function(){
+                       $("#sdate").val('');
+                       $("#edate").val('');
+                       $("#custom").val('');
+                       $("#phone").val('');
+                       $("#kid").val('');
+                       this.query();
+                   },
+                   getkinds : function(){
+                       var that = this;
+                       $.getJSON(that.url+"/kind/query",function(data){
+                           that.kinds = data;
+                       })
+                   },
                     query : function () {
                         var that = this;
                         var ps = {
                             page:that.page,
                             rows:that.rows,
-
+                            sdate:$("#sdate").val(),
+                            edate:$("#edate").val(),
+                            custom:$("#custom").val(),
+                            phone:$("#phone").val(),
+                            kname:$("#kid").val()
                         }
                         $.getJSON(that.url+"/reserve/query",ps,function(data){
                             that.reserves = data.list;
+                            that.pages = data.pages;
                         })
                     }
                }
             });
             vue.query();
+            vue.getkinds();
+
             $("#sdate,#edate").datepicker({
                 autoclose:true,
                 language:'zh-CN',
@@ -57,7 +92,7 @@
             <div class="col-md-2" style="padding-left:2px;padding-top:2px" id="left"></div>
             <div class="col-md-10" style="padding-top:10px" id="app">
                 <div class="row" style="margin-bottom: 10px">
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <div class="input-group">
                             <input id="sdate" placeholder="开始时间" class="form-control">
                             <div class="input-group-addon">~</div>
@@ -73,10 +108,14 @@
                     <div class="col-md-2">
                         <select id="kid" class="form-control">
                             <option value="">客房类型</option>
+                            <option v-for="k in kinds" :value="k.name">{{k.name}}</option>
                         </select>
                     </div>
                     <div class="col-md-1">
-                        <button class="btn btn-primary">查询</button>
+                        <button @click="reset" class="btn btn-default">重置</button>
+                    </div>
+                    <div class="col-md-1">
+                        <button @click="query" class="btn btn-primary">查询</button>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -109,27 +148,23 @@
                             <td>{{r.price}}</td>
                             <td>{{r.total}}</td>
                             <td><button class="btn btn-warning">修改</button></td>
-                            <td><button class="btn btn-success">入住</button></td>
+                            <td><button @click="change(r.id)" class="btn btn-success">入住</button></td>
                             <td><button class="btn btn-danger">退订</button></td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
-                <div class="row">
+                <div class="row" v-if="pages>1">
                     <div class="col-md-12 text-center">
                         <nav aria-label="Page navigation">
                             <ul class="pagination">
-                                <li>
+                                <li @click="goto(1)">
                                     <a href="#" aria-label="Previous">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
-                                <li><a href="#">1</a></li>
-                                <li><a href="#">2</a></li>
-                                <li><a href="#">3</a></li>
-                                <li><a href="#">4</a></li>
-                                <li><a href="#">5</a></li>
-                                <li>
+                                <li v-for="n in pages" @click="goto(n)"><a href="#">{{n}}</a></li>
+                                <li @click="goto(pages)">
                                     <a href="#" aria-label="Next">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
